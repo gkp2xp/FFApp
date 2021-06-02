@@ -37,42 +37,50 @@ namespace FFApp.Components
                     Value = grouping.Investments.Sum(i => i.CurrentValue),
                     LinkId = string.Empty,
                     Hierachy = string.Empty,
+                    Children = new List<Entities.InvestmentBreakdown>(),
                 };
-
-                result.Add(breakdownPortfolioGrouping);
 
                 breakdownPortfolioGrouping.Hierachy = BuildHierachy(breakdownPortfolioGrouping, grouping.PortfolioGroup, result) + breakdownPortfolioGrouping.Id + "/";
 
-                var breakdownInvestments = grouping.Investments.Select((investment, index) => new Entities.InvestmentBreakdown {
+                breakdownPortfolioGrouping.Children = grouping.Investments.Select((investment, index) => new Entities.InvestmentBreakdown {
                     Id = investment.Id.ToString(),
                     Label = investment.Label,
                     DisplayType = Entities.DisplayType.Investment,
                     Value = investment.CurrentValue,
                     LinkId = breakdownPortfolioGrouping.Id,
                     Hierachy = breakdownPortfolioGrouping.Hierachy + index.ToString() + "/",
-                });
-
-                result.AddRange(breakdownInvestments);
+                    Children = new List<Entities.InvestmentBreakdown>(),
+                }).ToList();
             }
 
             return result;
         }
 
-        private int GetHierachyLevel(Entities.PortfolioGrouping grouping)
+        public IEnumerable<Entities.InvestmentBreakdown> Flatterning(Entities.InvestmentBreakdown investmentBreakDown)
         {
-            var hierachyLevel = 0;
-            var current = grouping.Parent;
-            while (current != null) {
-                hierachyLevel++;
-                current = current.Parent;
+            if (investmentBreakDown.Children.Count == 0) return Enumerable.Empty<Entities.InvestmentBreakdown>();
+            if (!investmentBreakDown.Children.Any(c => c.DisplayType == Entities.DisplayType.PortfolioGrouping)) {
+                return investmentBreakDown.Children
+                                          .OrderByDescending(c => c.Value)
+                                          .ThenBy(c => c.Label);
             }
 
-            return hierachyLevel;
+            List<Entities.InvestmentBreakdown> list = new List<Entities.InvestmentBreakdown>();
+            foreach (var child in investmentBreakDown.Children.OrderByDescending(c => c.Value)
+                                              .ThenBy(c => c.Label))
+            {
+                list.Add(child);
+                list.AddRange(Flatterning(child));
+            }
+
+            return list;
         }
+
 
         private string BuildHierachy(Entities.InvestmentBreakdown current, Entities.PortfolioGrouping grouping, List<Entities.InvestmentBreakdown> result)
         {
-            if (grouping == null || grouping.Parent == null) {
+            if (grouping != null && grouping.Parent == null) {
+                result.Add(current);
                 return "/";
             }
 
@@ -85,17 +93,19 @@ namespace FFApp.Components
                     DisplayType = Entities.DisplayType.PortfolioGrouping,
                     Value = 0,
                     LinkId = string.Empty,
-                    Hierachy = string.Empty
-                };
-                result.Add(investmentBreakDownParent);
-                investmentBreakDownParent.Hierachy = BuildHierachy(investmentBreakDownParent, parent.Parent, result) + investmentBreakDownParent.Id + "/";
+                    Hierachy = string.Empty,
+                    Children = new List<Entities.InvestmentBreakdown> { current }
+                };                
+                investmentBreakDownParent.Hierachy = BuildHierachy(investmentBreakDownParent, parent, result) + investmentBreakDownParent.Id + "/";
+            }
+            else {
+                investmentBreakDownParent.Children.Add(current);
             }
 
             current.LinkId = investmentBreakDownParent.Id;
             investmentBreakDownParent.Value += current.Value;
 
             return investmentBreakDownParent.Hierachy;
-
         }
     }
 }

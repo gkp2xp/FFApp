@@ -8,5 +8,6 @@ namespace FFApp.Components
     public interface IPortfolioService
     {
         IEnumerable<Entities.InvestmentBreakdown> GetBreakdown();
+        IEnumerable<Entities.InvestmentBreakdown> Flatterning(Entities.InvestmentBreakdown investmentBreakDown);
     }
 }
