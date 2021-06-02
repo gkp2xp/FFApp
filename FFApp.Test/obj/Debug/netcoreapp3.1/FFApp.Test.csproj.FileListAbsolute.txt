@@ -93,3 +93,4 @@ C:\Users\omdje\source\repos\FFApp\FFApp.Test\obj\Debug\netcoreapp3.1\FFApp.Test.
 C:\Users\omdje\source\repos\FFApp\FFApp.Test\obj\Debug\netcoreapp3.1\FFApp.Test.dll
 C:\Users\omdje\source\repos\FFApp\FFApp.Test\obj\Debug\netcoreapp3.1\FFApp.Test.pdb
 C:\Users\omdje\source\repos\FFApp\FFApp.Test\obj\Debug\netcoreapp3.1\FFApp.Test.genruntimeconfig.cache
+C:\Users\omdje\source\repos\FFApp\FFApp.Test\obj\Debug\netcoreapp3.1\FFApp.Test.csprojAssemblyReference.cache
