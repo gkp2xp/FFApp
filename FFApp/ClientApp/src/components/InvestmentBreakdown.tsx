@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { ApplicationState } from '../store';
 import * as InvestmentsStore from '../store/Investments';
 
+import Chart from 'react-google-charts';
 
 // At runtime, Redux will merge together...
 type InvestmentBreakDownProps =
@@ -22,14 +23,52 @@ class InvestmentBreakDown extends React.Component<InvestmentBreakDownProps> {
     return (
       <React.Fragment>
         <h1 id="tabelLabel">Investments</h1>
-        {this.renderTable()}
+            {this.renderChart()}
+            {this.renderTable()}
+
       </React.Fragment>
     );
   }
 
   private ensureDataFetched() {
       this.props.requestInvestments();
-  }
+    }
+
+    private renderChart() {
+        if (this.props.error || this.props.isLoading) {
+            return null;
+        }
+
+        const data: InvestmentsStore.ChartData[] = this.props.investments
+            .filter((data: InvestmentsStore.InvestmentBreakDown) => data.hierachyLevel === 1)
+            .map((data: InvestmentsStore.InvestmentBreakDown) => { return { label: data.label, value: data.value.toString() } });
+
+        let temp: any = [];
+        temp.push(["Grouping", "Value"]);
+        data.forEach((item) => temp.push([item.label, parseInt(item.value)]));
+
+        return (
+             <Chart
+                width={'500px'}
+                height={'300px'}
+                chartType="BarChart"
+                loader={<div>Loading Chart</div>}
+                data={temp}
+                options={{
+                    // Material design options
+                    title: 'Top-level portfolio grouping',
+                    chartArea: { width: '50%' },
+                    hAxis: {
+                        title: 'Investments',
+                        minValue: 0,
+                    },
+                    vAxis: {
+                        title: 'Top-level portfolio'
+                    }
+                }}
+            />
+        );
+    }
 
   private renderTable() {
     return (
@@ -38,7 +77,6 @@ class InvestmentBreakDown extends React.Component<InvestmentBreakDownProps> {
                 <tr>
             <th>Label</th>
                     <th><span style={{ float: 'right' }}>Value</span></th>
-                    <th>LinkId</th>
           </tr>
         </thead>
             <tbody>
@@ -50,7 +88,6 @@ class InvestmentBreakDown extends React.Component<InvestmentBreakDownProps> {
                     <tr key={investment.id}>
                         <td><div style={{ marginLeft: (investment.hierachyLevel * 20).toString() + "px" }} >{investment.label}</div></td>
                         <td><div style={{ float: 'right' }}>{investment.value}</div></td>
-                        <td><div>{investment.linkId}</div></td>
                     </tr>
           )}
         </tbody>

@@ -12,9 +12,9 @@ namespace FFApp.Models
         public InvestmentBreakdownModel(Entities.InvestmentBreakdown ib) {
             this.id = ib.Id;
             this.label = ib.Label;
-            this.value = string.Format("{0:C}", ib.Value);
+            this.value = string.Format("{0:0.##}", ib.Value);
             this.displayType = ib.DisplayType;
-            this.linkId = ib.Hierachy;
+            this.linkId = ib.LinkId;
             this.hierachyLevel = ib.Hierachy.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries).Length;
         }
 

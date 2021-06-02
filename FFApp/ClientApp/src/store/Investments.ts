@@ -18,7 +18,11 @@ export interface InvestmentState {
     isLoading: boolean;
     error: string | null;
     investments: InvestmentBreakDown[];
-    barChartPayload: InvestmentBreakDown[];
+}
+
+export interface ChartData {
+    label: string;
+    value: string;
 }
 
 export interface InvestmentBreakDown {
@@ -78,7 +82,7 @@ export const actionCreators =  {
 // ----------------
 // REDUCER - For a given state and action, returns the new state. To support time travel, this must not mutate the old state.
 
-const unloadedState: InvestmentState = { investments: [], isLoading: false, error: null, barChartPayload: [] };
+const unloadedState: InvestmentState = { investments: [], isLoading: false, error: null };
 
 export const reducer: Reducer<InvestmentState> = (state: InvestmentState | undefined, incomingAction: Action): InvestmentState => {
     if (state === undefined) {
@@ -91,21 +95,18 @@ export const reducer: Reducer<InvestmentState> = (state: InvestmentState | undef
             return {
                 isLoading: true,
                 investments: [],
-                barChartPayload: [],
                 error: null,
             };
         case ActionType.REQUEST_INVESTMENTS_ERROR:
             return {
                 isLoading: false,
                 investments: [],
-                barChartPayload: [],
                 error: action.payload
             };
         case ActionType.REQUEST_INVESTMENTS_SUCCESS:
             return {
                 isLoading: false,
                 investments: action.payload,
-                barChartPayload: action.payload.filter((data: InvestmentBreakDown) => data.hierachyLevel === 1),
                 error: null
             };
         default:
