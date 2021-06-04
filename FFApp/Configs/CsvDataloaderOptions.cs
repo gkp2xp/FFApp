@@ -13,6 +13,8 @@ namespace FFApp.Configs
         public string PortfolioGroupingFilename { get; set; }
         public bool PortfolioGroupingHasHeader { get; set; }
         public int UnknownPortfolioId { get; set; }
+        public int InvestmentsCacheDuration { get; set; }
+        public int PortfoliosCacheDuration { get; set; }
 
     }
 }
