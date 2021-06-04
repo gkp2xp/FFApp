@@ -1,5 +1,6 @@
 ﻿using FFApp.Configs;
 using FFApp.Entities;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -13,9 +14,14 @@ namespace FFApp.Components
     {
         private readonly CsvDataloaderOptions _configuration = null;
         private readonly ILogger<PortfolioService> _logger;
+        private readonly IMemoryCache _cache;
 
-        public CsvDataLoader(ILogger<PortfolioService> logger, IOptions<CsvDataloaderOptions> options)
+        private static string INVESTMENTS_CACHE_ENTRY = "INVESTMENTS";
+        private static string PORTFOLIOS_CACHE_ENTRY = "PORTFOLIOS";
+
+        public CsvDataLoader(IMemoryCache cache, ILogger<PortfolioService> logger, IOptions<CsvDataloaderOptions> options)
         {
+            _cache = cache;
             _configuration = options.Value;
             _logger = logger;
         }
@@ -32,29 +38,19 @@ namespace FFApp.Components
 
         public IEnumerable<Investment> LoadInvestments()
         {
-            var portfolioGroupings = LoadPortfolioGroupings()
-                                        .OrderBy(p => p.Id).ToList();
+            IEnumerable<Investment> investments;
 
-            var unknownPortfolio = GetUnknownPortfolio(portfolioGroupings);
-
-            var investments = new List<Investment>();
-            PortfolioGrouping pg = null;
-
-            foreach (var data in Helpers.CsvReader.Read(_configuration.InvestmentFilename, _configuration.InvestmentFileHasHeader))
+            if (!_cache.TryGetValue(INVESTMENTS_CACHE_ENTRY, out investments))
             {
-                var investment = ParseInvestment(data);
-                if (pg == null || pg.Id != investment.PortfolioGroupingId) {
-                    pg = portfolioGroupings.FirstOrDefault(p => p.Id == investment.PortfolioGroupingId);
-                }
+                _logger.LogInformation("cache missed. Cold load in process...");
 
-                if (pg == null) {
-                    investment.PortfolioGrouping = unknownPortfolio;
-                    investment.PortfolioGroupingId = unknownPortfolio.Id;                        
-                } else {
-                    investment.PortfolioGrouping = pg;
-                }
-                
-                investments.Add(investment);
+                investments = LoadInvestmentsFromFile();
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_configuration.InvestmentsCacheDuration));
+                _cache.Set(INVESTMENTS_CACHE_ENTRY, investments, cacheEntryOptions);
+            }
+            else
+            {
+                _logger.LogInformation("Data loaded from cache");
             }
 
             return investments;
@@ -62,12 +58,31 @@ namespace FFApp.Components
 
         public IEnumerable<PortfolioGrouping> LoadPortfolioGroupings()
         {
+            IEnumerable<PortfolioGrouping> portfolioGroupings;
+
+            if (!_cache.TryGetValue(PORTFOLIOS_CACHE_ENTRY, out portfolioGroupings)){
+                _logger.LogInformation("cache missed. Cold load in process...");
+
+                portfolioGroupings = LoadPortfolioGroupingsFromFile();
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_configuration.PortfoliosCacheDuration));
+                _cache.Set(PORTFOLIOS_CACHE_ENTRY, portfolioGroupings, cacheEntryOptions);
+            } else {
+                _logger.LogInformation("Data loaded from cache");
+            }
+
+            return portfolioGroupings;
+        }
+
+        private IEnumerable<PortfolioGrouping> LoadPortfolioGroupingsFromFile()
+        {
             var portfolioGroupings = new List<PortfolioGrouping>();
             PortfolioGrouping parent = null;
 
-            foreach( var data in Helpers.CsvReader.Read(_configuration.PortfolioGroupingFilename, _configuration.PortfolioGroupingHasHeader)) {
+            foreach (var data in Helpers.CsvReader.Read(_configuration.PortfolioGroupingFilename, _configuration.PortfolioGroupingHasHeader))
+            {
                 var pg = ParsePortfolio(data);
-                if (parent == null || parent.Id != pg.ParentId) {
+                if (parent == null || parent.Id != pg.ParentId)
+                {
                     parent = portfolioGroupings.FirstOrDefault(p => p.Id == pg.ParentId);
                 }
                 pg.Parent = parent;
@@ -99,6 +114,36 @@ namespace FFApp.Components
             
 
             return new PortfolioGrouping { Id = id, Label = data[2], ParentId = parentId };
+        }
+
+        private IEnumerable<Investment> LoadInvestmentsFromFile()
+        {
+            var portfolioGroupings = LoadPortfolioGroupings()
+                                        .OrderBy(p => p.Id).ToList();
+
+            var unknownPortfolio = GetUnknownPortfolio(portfolioGroupings);
+
+            var investments = new List<Investment>();
+            PortfolioGrouping pg = null;
+
+            foreach (var data in Helpers.CsvReader.Read(_configuration.InvestmentFilename, _configuration.InvestmentFileHasHeader))
+            {
+                var investment = ParseInvestment(data);
+                if (pg == null || pg.Id != investment.PortfolioGroupingId) {
+                    pg = portfolioGroupings.FirstOrDefault(p => p.Id == investment.PortfolioGroupingId);
+                }
+
+                if (pg == null) {
+                    investment.PortfolioGrouping = unknownPortfolio;
+                    investment.PortfolioGroupingId = unknownPortfolio.Id;                        
+                } else {
+                    investment.PortfolioGrouping = pg;
+                }
+                
+                investments.Add(investment);
+            }
+
+            return investments;
         }
 
         private Investment ParseInvestment(string[] data)

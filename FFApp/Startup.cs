@@ -24,6 +24,7 @@ namespace FFApp
             services.Configure<Configs.CsvDataloaderOptions>(Configuration.GetSection(Configs.CsvDataloaderOptions.Name));
             services.AddScoped<Components.IDataLoader, Components.CsvDataLoader>();
             services.AddScoped<Components.IPortfolioService, Components.PortfolioService>();
+            services.AddScoped<Components.IInvestmentService, Components.InvestmentService>();
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
