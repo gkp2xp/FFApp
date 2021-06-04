@@ -88,6 +88,7 @@ class InvestmentBreakDown extends React.Component<InvestmentBreakDownProps> {
                     <tr key={investment.id}>
                         <td><div style={{ marginLeft: (investment.hierachyLevel * 20).toString() + "px" }} >{investment.label}</div></td>
                         <td><div style={{ float: 'right' }}>{investment.value}</div></td>
+                        <td><button>Projected Value</button></td>
                     </tr>
           )}
         </tbody>
