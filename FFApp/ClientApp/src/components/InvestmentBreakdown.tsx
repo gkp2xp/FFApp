@@ -87,7 +87,7 @@ class InvestmentBreakDown extends React.Component<InvestmentBreakDownProps> {
                 {!this.props.error && !this.props.isLoading && this.props.investments.map((investment: InvestmentsStore.InvestmentBreakDown) => 
                     <tr key={investment.id}>
                         <td><div style={{ marginLeft: (investment.hierachyLevel * 20).toString() + "px" }} >{investment.label}</div></td>
-                        <td><div style={{ float: 'right' }}>{investment.value}</div></td>
+                        <td><div style={{ float: 'right' }}>{investment.value}</div></td>                        
                     </tr>
           )}
         </tbody>
