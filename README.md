@@ -7,3 +7,15 @@ Solovis' users are primarily "Institutional Investors". institutional investors 
 At Solovis, we allow our users to analyze their portfolio in many different ways. Users can create customized categories for their investments and then analyze their portfolio according to those categories. For example, a user could track the geographic region of each of their investments. With that information they could then see how much of their portfolio is invested in Texas, Oregon, or the entire United States as a whole. However geographic region is only one possibility. Investments could be grouped and analyzed by sector, asset class, or something else entirely.
 
 For the purpose of being generic, we will refer to these categories as "portfolio groupings" since they are a way that investments within a portfolio can be grouped. Portfolio groupings are hierarchical in nature. In the geographic region example above the United States would be the parent of Texas and Oregon since both Texas and Oregon are within the United States. Portfolio Groupings can be arbitrarily deep.
+
+
+
+### Build Instructions for the Server
+1. navigate to project folder
+2. run dotnet restore && dotnet build
+3. run dotnet run
+
+### Build Instructions for the ClientApp
+1. navigate to client folder
+2. run the following commands
+3. npm install && npm start
